@@ -935,25 +935,19 @@ class TPOTBase(BaseEstimator):
                 self.evaluated_individuals_[individual_str] = (5000., -float('inf'))
                 if not self._pbar.disable:
                     self._pbar.update(1)
-            # Check if the individual was evaluated before
-            elif individual_str in self.evaluated_individuals_:
-                if self.verbosity > 2:
-                    self._pbar.write('Pipeline encountered that has previously been evaluated during the '
-                                     'optimization process. Using the score from the previous evaluation.')
-                if not self._pbar.disable:
-                    self._pbar.update(1)
             else:
                 try:
                     # Transform the tree expression into an sklearn pipeline
                     sklearn_pipeline = self._toolbox.compile(expr=individual)
 
+                    randState = np.random.randint(1,100000000)
                     # Fix random state when the operator allows
-                    self._set_param_recursive(sklearn_pipeline.steps, 'random_state', 42)
+                    self._set_param_recursive(sklearn_pipeline.steps, 'random_state', randState)
                     # Setting the seed is needed for XGBoost support because XGBoost currently stores
                     # both a seed and random_state, and they're not synced correctly.
                     # XGBoost will raise an exception if random_state != seed.
                     if 'XGB' in sklearn_pipeline_str:
-                        self._set_param_recursive(sklearn_pipeline.steps, 'seed', 42)
+                        self._set_param_recursive(sklearn_pipeline.steps, 'seed', randState)
 
                     # Count the number of pipeline operators as a measure of pipeline complexity
                     operator_count = self._operator_count(individual)
